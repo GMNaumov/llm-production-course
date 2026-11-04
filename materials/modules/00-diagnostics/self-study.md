@@ -52,16 +52,33 @@ Baseline — действующий способ выполнения той ж�
 Ниже полностью синтетическая оценка месячного эффекта. Стандартная библиотека Python; запуск не обращается к системам компании.
 
 ```python
-def monthly_effect(volume, before_min, assisted_min, hourly_rate,
-                   extra_error_probability, error_cost, monthly_cost):
+def monthly_effect(
+    volume,
+    before_min,
+    assisted_min,
+    hourly_rate,
+    extra_error_probability,
+    error_cost,
+    monthly_cost,
+):
     capacity_value = volume * (before_min - assisted_min) / 60 * hourly_rate
     extra_loss = volume * extra_error_probability * error_cost
     return capacity_value - extra_loss - monthly_cost
 
-print(round(monthly_effect(
-    volume=400, before_min=12, assisted_min=8, hourly_rate=1200,
-    extra_error_probability=0.01, error_cost=2000, monthly_cost=10000
-)))  # 14000 условных денежных единиц
+
+print(
+    round(
+        monthly_effect(
+            volume=400,
+            before_min=12,
+            assisted_min=8,
+            hourly_rate=1200,
+            extra_error_probability=0.01,
+            error_cost=2000,
+            monthly_cost=10000,
+        )
+    )
+)  # 14000 условных денежных единиц
 ```
 
 В `assisted_min` уже включена проверка человеком. `monthly_cost` включает инфраструктуру, сопровождение, обновление и долю подготовки данных. Если проверка займёт 11 минут вместо 8, результат станет отрицательным: −10000. Это анализ чувствительности, а не обещание эффекта. Разовые затраты и горизонт окупаемости подробно разбираются в [модуле 11](../11-capstone/self-study.md).

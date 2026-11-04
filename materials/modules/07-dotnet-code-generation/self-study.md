@@ -53,7 +53,7 @@ dotnet test --no-build --configuration Release
 
 Контракт — не только имя метода. В него входят типы, исключения, nullability, сериализация DTO, имена JSON-полей, коды HTTP, порядок операций, единицы и транзакционные гарантии. Изменение `decimal` на `double` может нарушить расчёт; исчезнувший `CancellationToken` меняет поведение под нагрузкой; `async void` скрывает завершение и исключения.
 
-Следующий самодостаточный фрагмент C# показывает чистое предметное преобразование. Он не решает учебное задание и не обращается к БД.
+Следующий самодостаточный фрагмент C# показывает чистое предметное преобразование без обращения к БД. Он иллюстрирует подход к эталонному решению; перед работой П7.2 сначала выполните собственную попытку по её требованиям.
 
 ```csharp
 using System;
@@ -63,9 +63,13 @@ public static class QuantityRules
     public static decimal Remaining(decimal ordered, decimal completed)
     {
         if (ordered < 0m)
+        {
             throw new ArgumentOutOfRangeException(nameof(ordered));
+        }
         if (completed < 0m || completed > ordered)
+        {
             throw new ArgumentOutOfRangeException(nameof(completed));
+        }
         return ordered - completed;
     }
 }

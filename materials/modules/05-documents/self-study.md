@@ -45,10 +45,10 @@ def edit_distance(reference, prediction):
     for i, a in enumerate(reference, start=1):
         curr = [i]
         for j, b in enumerate(prediction, start=1):
-            curr.append(min(curr[-1] + 1, prev[j] + 1,
-                            prev[j-1] + (a != b)))
+            curr.append(min(curr[-1] + 1, prev[j] + 1, prev[j - 1] + (a != b)))
         prev = curr
     return prev[-1]
+
 
 reference, prediction = "10±0,1", "10+0,1"
 cer = edit_distance(reference, prediction) / len(reference)
@@ -77,7 +77,9 @@ JSON Schema задаёт структуру и ограничения; `required
 
 ```python
 from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
 
 class Source(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -92,6 +94,7 @@ class Source(BaseModel):
         if not (0 <= x0 < x1 <= 1 and 0 <= y0 < y1 <= 1):
             raise ValueError("Неверная область")
         return self
+
 
 class Diameter(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -109,6 +112,7 @@ class Diameter(BaseModel):
         elif self.value_mm is not None:
             raise ValueError("Непрочитанное поле не должно иметь значения")
         return self
+
 
 print(Diameter(state="unreadable", value_mm=None, source=None).state)
 ```

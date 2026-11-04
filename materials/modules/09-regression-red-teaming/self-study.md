@@ -34,8 +34,8 @@ Gate — заранее заданное правило допуска, а не 
 ```python
 from math import isfinite
 
-def gate(*, critical_violations, quality_lower_bound, p95_ms,
-         min_quality, max_p95_ms):
+
+def gate(*, critical_violations, quality_lower_bound, p95_ms, min_quality, max_p95_ms):
     if type(critical_violations) is not int or critical_violations < 0:
         return "insufficient evidence"
     if critical_violations > 0:
@@ -51,8 +51,16 @@ def gate(*, critical_violations, quality_lower_bound, p95_ms,
         return "fail"
     return "pass"
 
-print(gate(critical_violations=1, quality_lower_bound=0.99,
-           p95_ms=100, min_quality=0.90, max_p95_ms=500))  # fail
+
+print(
+    gate(
+        critical_violations=1,
+        quality_lower_bound=0.99,
+        p95_ms=100,
+        min_quality=0.90,
+        max_p95_ms=500,
+    )
+)  # fail
 ```
 
 Пример отклоняет отсутствующие, бесконечные и NaN-измерения, чтобы неизвестное качество не превратилось в pass. В действующей реализации дополнительно проверяют единицы и полноту всех обязательных прогонов. Ноль обнаруженных нарушений описывает только выполненный набор; он не является гарантией отсутствия неизвестной атаки.

@@ -58,7 +58,9 @@ public sealed class OrdersClient
     public async Task<OrderDto?> GetAsync(string id, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(id) || id.Length > 64)
+        {
             throw new ArgumentException("Invalid order identifier", nameof(id));
+        }
 
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
         deadline.CancelAfter(TimeSpan.FromSeconds(5)); // пример, не целевой SLA
@@ -70,7 +72,9 @@ public sealed class OrdersClient
         using var response = await http.SendAsync(
             request, HttpCompletionOption.ResponseHeadersRead, deadline.Token);
         if (response.StatusCode == HttpStatusCode.NotFound)
+        {
             return null;
+        }
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<OrderDto>(
             cancellationToken: deadline.Token);
@@ -81,6 +85,8 @@ public sealed class OrdersClient
 Таймаут охватывает получение токена, заголовков и тела. В прикладном сервисе дополнительно ограничивают размер ответа и пагинацию. Запросный заголовок авторизации предотвращает смешение токенов разных пользователей через общие `DefaultRequestHeaders`. Авторизацию объекта выполняет API/инструмент, а не этот транспортный фрагмент. Ошибки 401/403, cancellation, неправильный JSON и недоступность сервиса должны иметь разные внутренние категории.
 
 Ограниченные retries полезны при временном отказе чтения, 429 или некоторых 5xx, с backoff, jitter и общим deadline. 400/403 не исправляются повтором того же запроса. После таймаута записи нельзя знать, произошёл ли эффект: повтор без идемпотентности может создать дубль. Необработанное тело ошибки не отправляется модели и не сохраняется в общий лог.
+
+Проверка `bytes.Length` после `ReadAsByteArrayAsync` обнаруживает слишком большой ответ уже после его загрузки. Для жёсткого ограничения читают поток порциями до лимита плюс один байт; `Content-Length` служит лишь ранней проверкой, поскольку может отсутствовать. Общий deadline действует и при чтении тела, и во время задержки перед повтором. Отмена в такой задержке должна обрабатываться наравне с отменой сетевого вызова. В [исполняемом клиенте](../../practice-kit/dotnet/Client/OrdersClient.cs) эти границы проверяются отдельно от доступности реального API.
 
 ## 3. Semantic layer раньше произвольного SQL
 
@@ -95,9 +101,10 @@ BEGIN READ ONLY;
 SET LOCAL statement_timeout = '2s';
 SET LOCAL lock_timeout = '500ms';
 SELECT order_id, status
-FROM training_api.allowed_order_status
-WHERE order_id = $1 AND plant_id = $2
-LIMIT 20;
+  FROM training_api.allowed_order_status
+ WHERE order_id = $1
+   AND plant_id = $2
+ LIMIT 20;
 COMMIT;
 ```
 

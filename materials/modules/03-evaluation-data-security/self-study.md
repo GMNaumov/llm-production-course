@@ -47,14 +47,16 @@ Precision отвечает «какая доля выбранных положи
 ```python
 from math import sqrt
 
+
 def wilson(successes, total, z=1.96):
     if total <= 0 or not 0 <= successes <= total:
         raise ValueError("Неверные счётчики")
     p = successes / total
-    den = 1 + z*z/total
-    center = (p + z*z/(2*total)) / den
-    half = z * sqrt(p*(1-p)/total + z*z/(4*total*total)) / den
+    den = 1 + z * z / total
+    center = (p + z * z / (2 * total)) / den
+    half = z * sqrt(p * (1 - p) / total + z * z / (4 * total * total)) / den
     return center - half, center + half
+
 
 print(tuple(round(x, 3) for x in wilson(19, 20)))  # (0.764, 0.991)
 ```

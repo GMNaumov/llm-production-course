@@ -162,6 +162,8 @@ docker run --rm --network llm-course_training --mount "type=bind,source=${PWD}/d
 
 Исходники ro, временная копия и obj/bin внутри одноразового контейнера; NuGet.Config не содержит внешних feeds. Для П7 работайте со своей копией `Quantity`; `reference` открывайте после попытки. Семь проверок reference — инженерная проверка эталона, не grader сдаваемых решений. Legacy/API предприятия этими примерами не проверены.
 
+Запуск `run-dotnet.sh` также выполняет 11 проверок `ClientChecks` через подставной HTTP-handler: ответы API, ограничение тела при неизвестной длине, конечное число повторов, таймаут и отмена во время задержки. Реальный API-клиент использует ту же реализацию `OrdersClient`.
+
 ## VLM и обучение
 
 Сначала остановите inference, чтобы не держать несколько моделей на учебной GPU:
@@ -195,6 +197,8 @@ docker run --rm --gpus all --network none --mount "type=bind,source=${PWD},targe
 Четыре пары hard negatives — механика cross-encoder. Для П8.3 нужны собственные разрешённые train/dev, диагностика ошибки, независимая проверка negatives и финальная оценка. Для serving укажите RERANKER_PATH=/kit/work/reranker-adapted в своей Compose-копии; веса сохраняются в work и доступны inference. См. [официальное руководство cross-encoder](https://sbert.net/docs/cross_encoder/training_overview.html).
 
 После упражнений очистите `$env:ADAPTER_PATH=''`, `$env:QUANTIZE='0'` и пересоздайте inference для base-режима. Флаг окружения применяется при создании контейнера, а не меняет уже работающий процесс.
+
+Для своего train reranker передайте `--pairs /kit/work/<каталог-прогона>/pairs-train.json`: JSON-массив троек `["запрос", "документ", 1.0]` или `["запрос", "документ", 0.0]`. Скрипт сохраняет hash файла, базовый model manifest и параметры в `run.json`. Data card, групповой split и независимая проверка разметки остаются обязательными.
 
 ## Облачное сравнение П1.1
 
@@ -234,6 +238,17 @@ docker save -o bundle/course-images.tar course-cpu:2026-11 course-gpu:2026-11 co
 Rollback возвращает цельный совместимый комплект, но не старые права и не повторяет уже совершённые эффекты. Restore накладывает **актуальный** ledger отзывов/удалений; пример — `lifecycle.py`. RTO/RPO подтверждаются измеренным восстановлением. Для другого project name замените имена сети/volume в .NET-команде.
 
 ## Типовые затруднения
+
+После изменений эталона автор материалов проверяет регрессии и примеры конспектов без сети и GPU. Для этого нужна полная копия репозитория, а временные результаты размещаются в tmpfs:
+
+```powershell
+docker run --rm --network none --mount "type=bind,source=${PWD}/../..,target=/repo,readonly" --tmpfs /repo/materials/practice-kit/work course-cpu:2026-11 python /repo/materials/practice-kit/validation/review_checks.py
+docker run --rm --network none --mount "type=bind,source=${PWD}/../..,target=/repo,readonly" course-cpu:2026-11 python /repo/materials/practice-kit/validation/check_materials.py /repo
+```
+
+Вторая команда проверяет структуру, локальные ссылки, часы и синтаксис Python-блоков. Полная интеграционная проверка `validation/author_checks.py` дополнительно требует db/api/gateway/inference. Ни один из этих скриптов не проверяет сдаваемые работы.
+
+На Windows `powershell -NoProfile -ExecutionPolicy Bypass -File validation/preflight_checks.ps1` проверяет три диагностических исхода с подставными командами, без обращения к Docker и WSL. Она перезаписывает `work/preflight.txt` синтетическим журналом; для реального протокола после неё запустите `scripts/preflight.ps1`.
 
 | Симптом | Проверить | Действие |
 |---|---|---|

@@ -49,21 +49,39 @@ HITL описывает, когда человек включается, что 
 Синтетический расчёт на Python, стандартная библиотека. Он показывает анализ чувствительности на горизонте шести месяцев, без дисконтирования и с постоянным объёмом.
 
 ```python
-def economics(*, monthly_volume, saved_minutes, hourly_rate,
-              realization, fixed_monthly, variable_per_case,
-              extra_loss_per_case, initial_cost, months=6):
+def economics(
+    *,
+    monthly_volume,
+    saved_minutes,
+    hourly_rate,
+    realization,
+    fixed_monthly,
+    variable_per_case,
+    extra_loss_per_case,
+    initial_cost,
+    months=6,
+):
     monthly_value = monthly_volume * saved_minutes / 60 * hourly_rate * realization
-    monthly_net = (monthly_value - fixed_monthly - monthly_volume *
-                   (variable_per_case + extra_loss_per_case))
+    monthly_net = (
+        monthly_value
+        - fixed_monthly
+        - monthly_volume * (variable_per_case + extra_loss_per_case)
+    )
     horizon_net = months * monthly_net - initial_cost
     payback_months = initial_cost / monthly_net if monthly_net > 0 else None
     return round(monthly_net), round(horizon_net), payback_months
 
+
 for saved in (2, 5, 8):
     result = economics(
-        monthly_volume=600, saved_minutes=saved, hourly_rate=1200,
-        realization=0.7, fixed_monthly=12000, variable_per_case=5,
-        extra_loss_per_case=3, initial_cost=60000,
+        monthly_volume=600,
+        saved_minutes=saved,
+        hourly_rate=1200,
+        realization=0.7,
+        fixed_monthly=12000,
+        variable_per_case=5,
+        extra_loss_per_case=3,
+        initial_cost=60000,
     )
     print(saved, result[:2])
 # 2 (0, -60000)

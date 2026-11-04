@@ -99,3 +99,46 @@ VLM на crop исходной подписи «Поз. 7: 5±0,02 мм» выд
 Проверены 40 заданий и 40 решений, 112 часов, совпадение критериев программы, UTF-8, парность ограждений кода и локальные ссылки: ошибок нет. Python-файлы прошли синтаксический разбор. git diff --check прошёл. Полный набор 65 инженерных проверок требует db/api/gateway/inference и включает запреты неизвестной модели, streaming=true и превышения контекста. Машиночитаемые итоги — [results.json](validation/results.json), модельные контрольные суммы — [model-sources.json](validation/model-sources.json).
 
 Open WebUI повторно прошёл вход, список только training и non-stream chat с включённой аутентификацией. Дополнительным пользователям администратор выдаёт согласованный доступ; пустой список не исправляется отключением защиты.
+
+## Повторная проверка после ревью — 4 ноября 2026 года
+
+Этот раздел относится к изменениям [ревью курса](../REVIEW.md). Измерения выше и `validation/results.json` сохранены как исторический протокол; текущие итоги записаны отдельно в [review-results.json](validation/review-results.json). Для проверки создан project `llm-course-review` с новыми PostgreSQL- и secret-volumes; старые volumes не удалялись. Использованы прежние CPU/GPU-образы с обновлёнными исходниками через bind mount и отдельный образ `course-dotnet-review:2026-11`.
+
+| Проверка | Фактический результат |
+|---|---|
+| Интеграционные инварианты | **68/68**: SQL AST/права/семантика, API, gateway, ACL, replay и строгие типы inference |
+| Регрессии ревью | **15/15** методов unittest с негативными подслучаями; сеть и GPU не требуются |
+| Python в конспектах | Все 13 блоков разобраны; 12 исполнены в CPU-образе, конфигурация PEFT/Transformers — в GPU-образе |
+| C# | Два блока конспектов и проекты эталона собраны без предупреждений и ошибок; 7 проверок Quantity + 11 ClientChecks |
+| Настоящий HTTP-клиент | `ok`, `forbidden`, `dependency_error`, `timeout`, `not_found` против локального .NET API |
+| PowerShell | 3 регрессии с подставными командами; настоящий Windows/WSL/Docker/GPU preflight успешен, журнал UTF-8 без NUL |
+| OCR и JSON/HITL | Настоящий Tesseract: 40 страниц, отказов процесса нет; 40 результатов направлены на review |
+| QLoRA | 2 реальных шага NF4/LoRA, backward/optimizer/save, отдельный `work/review-adapter`; затем адаптер загружен в serving |
+| Reranker | 2 шага с `--pairs`, 1 шаг в сохранённом демонстрационном режиме; веса/manifest сохранены; 3 некорректных входа отклонены |
+| Dense/rerank serving | Реальные E5 и дообученный cross-encoder: Recall@3/MRR/nDCG = 1 на открытом dev; это проверка механики |
+| Ошибка модели | Реальная остановка inference: ошибки RAG сохранены; 2/2 запроса gateway дали `degraded_search`, генераций 0; сервис восстановлен |
+| Нагрузка | 4 запроса, 4 клиента: 2 `draft_for_review`, 2 отказа перегрузки; P95 всего ≈11,54 с |
+| Стиль и структура | Ruff 0.14.3: lint/format проходят; локальные ссылки, UTF-8, ограждения, 40+40, часы каждого модуля и маршруты проверены |
+
+OCR macro-CER совпал с предыдущим прогоном; P95 текущего запуска ≈553 мс. Модель VLM на crop снова прочитала знак допуска неверно: `7:5+0,02 MM` вместо `Поз. 7: 5±0,02 мм`. Автоматическая приёмка инженерного значения не включалась.
+
+Двухшаговый адаптер дал правильный смысл **1/6** и допустимую схему **3/6** на открытой статусной выборке. Это короткая проверка работоспособности и загрузки, не повтор прежнего 40-шагового эксперимента и не доказательство улучшения качества. Все шесть исходов сохранены. Пиковая PyTorch allocated-память QLoRA составила 886834688 байт; dev_loss ≈0,06050. Величины не описывают всю занятую VRAM и не подтверждают 7–8B на RTX 3060.
+
+Основные команды, выполненные из `materials/practice-kit`:
+
+```powershell
+# Отдельный project; локальный override задавал image course-dotnet-review:2026-11.
+docker compose -p llm-course-review -f compose.yaml -f work/review-compose.yaml run --rm secrets-init
+docker compose -p llm-course-review -f compose.yaml -f work/review-compose.yaml --profile integration up -d --build --wait db api gateway
+docker compose -p llm-course-review -f compose.yaml -f work/review-compose.yaml run --rm lab python validation/author_checks.py
+
+# Регрессии и конспекты: полная копия репозитория, временный work.
+docker run --rm --network none --mount "type=bind,source=${PWD}/../..,target=/repo,readonly" --tmpfs /repo/materials/practice-kit/work course-cpu:2026-11 python /repo/materials/practice-kit/validation/review_checks.py
+docker run --rm --network none --mount "type=bind,source=${PWD}/../..,target=/repo,readonly" course-cpu:2026-11 python /repo/materials/practice-kit/validation/check_materials.py /repo
+powershell -NoProfile -ExecutionPolicy Bypass -File validation/preflight_checks.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/preflight.ps1 -Image course-gpu:2026-11
+```
+
+Подробные команды обычных OCR/SQL/обучающих запусков находятся в README и заданиях; в ревью для обучения заданы отдельные `--out /kit/work/review-*` и меньшие smoke-бюджеты. Локальные диагностические скрипты и сырые результаты в `work/` не являются обязательными исходниками курса. Повторяемые регрессии сохранены в `validation/review_checks.py`, `validation/preflight_checks.ps1`, `validation/author_checks.py` и `dotnet/ClientChecks/`.
+
+Проверочная GPU — RTX 5060 Ti 16 ГБ. RTX 3060 12 ГБ, корпоративные данные/аутентификация, закрытый независимый test, внешний reviewer, облачный биллинг и перенос полного офлайн-комплекта на другой физический ПК не проверены этим ревью. Совместимость Open WebUI ранее проверялась; его конфигурация в текущем ревью не менялась, повтор UI-прогона не выполнялся. Предупреждения закреплённого GPU-стека о `torch_dtype` и параметре checkpointing сохранены в локальных логах; исполняемые шаги прошли, обновление зависимостей не выполнялось.

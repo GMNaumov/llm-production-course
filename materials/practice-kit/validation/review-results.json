@@ -1,0 +1,242 @@
+{
+  "date": "2026-11-04",
+  "scope": "author review of synthetic reference kit; no student grading or independent enterprise acceptance",
+  "docker_project": "llm-course-review",
+  "runtime": {
+    "python": "3.12.16",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "versions": {
+      "torch": "2.8.0+cu128",
+      "transformers": "4.57.1",
+      "peft": "0.17.1",
+      "bitsandbytes": "0.48.1",
+      "accelerate": "1.10.1"
+    },
+    "cuda": "12.8"
+  },
+  "images": {
+    "course-cpu:2026-11": "sha256:b3869a746920c8d552bd785186a35672c6825347e0b7d237b1f7a2b22ebcaab7",
+    "course-gpu:2026-11": "sha256:49e15e6032c9b1a4680949b9b9971c40952a9506f00a52c64b079419f67ebeac",
+    "course-dotnet-review:2026-11": "sha256:6113aaa8b3eef84622dff0d6166e35a009fbd68062ef44592c09ddeedc5f9487",
+    "postgres:16.6-bookworm": "sha256:557fea37a744d5f4c8faab304b0a90858b53ab119735a88c131fd19dab802f36",
+    "mcr.microsoft.com/dotnet/sdk:8.0": "sha256:6ba9644da07bb5b560a402acec9ca38711a0762969f1b61da261df5c9f6f85da"
+  },
+  "checks": {
+    "integration_passed": 68,
+    "review_unittest_methods_passed": 15,
+    "quantity_passed": 7,
+    "dotnet_client_passed": 11,
+    "csharp_markdown_libraries_compiled": 2,
+    "python_markdown_blocks_executed": 13,
+    "powershell_synthetic_cases_passed": 3,
+    "real_preflight_passed": true,
+    "reranker_invalid_inputs_rejected": 3,
+    "ruff_version": "0.14.3"
+  },
+  "source_sha256": {
+    "scripts/common.py": "2fddde65d74649c612b7580d5b937d63496ef21b9da8f86874a7b3b7016dc398",
+    "scripts/rag.py": "db1c714bf0c0965355976daca6b5752ec1cbe6db71af369d10a48dad8cef771e",
+    "scripts/gateway.py": "c40cc9958e66049ce3cc32311d3c8d209367ce85f841a70be3171bf2e81360ad",
+    "scripts/model_server.py": "42e9446ce18523f6a8b99aa273d830501705054232c737076e5827858c19c2d3",
+    "scripts/train_reranker.py": "61a6bf44d1ca6356f7479b19bbcbaf57308e56e6544f70c5c4eaccc56bfa1d85",
+    "scripts/preflight.ps1": "d53abd6600531bbef0bbcf2fff84fd498bc1687420d8417909e4b590a78001e7",
+    "validation/review_checks.py": "258fd9188dd2f58e82628788107c7de279112eadcabb08debc715ba75ae331f0",
+    "validation/preflight_checks.ps1": "26c35633922c3c1070c585c80dfcce0066b5bd02701d158b4ebb6a702cb1a9ad",
+    "validation/author_checks.py": "b88c057be44d8306cf8574153a2493665ce1ab5b0c00a8be68e1518398e24da7",
+    "dotnet/Client/OrdersClient.cs": "1718ea889a81b506adfb46e179140d4bf1b3a25d1ed222301786f9c335827b94",
+    "dotnet/ClientChecks/Program.cs": "e80a29293cb6ec3e5f691281be1be7690935e04aa9d3d978c193926724dbf350"
+  },
+  "curriculum_sha256": "e19aaf3ea00579292c4f131b6ed84f6a9bfb1d8d8c8e5b7ef66cb7e0718d46f3",
+  "qlora_smoke": {
+    "steps": 2,
+    "seed": 17,
+    "dev_loss": 0.06050161148111025,
+    "elapsed_seconds": 13.707581270000446,
+    "peak_allocated_bytes": 886834688,
+    "peak_reserved_bytes": 1361051648,
+    "train_sha256": "fb3ba1a4bde22864651b1f839812153dc1734ea3b6339b2c64de1fb561f3e84d",
+    "dev_sha256": "14db3c257e33bb8e647f479e1882f935c19f4b008ab3fc10dcc0779aef2d5a3b"
+  },
+  "reranker_smoke": {
+    "steps": 2,
+    "seed": 17,
+    "pairs_sha256": "5f40ff1cc8628f9c5c2acd316fba046cd59db02b1cedc73d063af64f256f8d78",
+    "versions": {
+      "torch": "2.8.0+cu128",
+      "transformers": "4.57.1",
+      "tokenizers": "0.22.2"
+    },
+    "seconds": 19.91130252699986
+  },
+  "integration": {
+    "serving": {
+      "state": "ready",
+      "device": "cuda",
+      "quantized": true,
+      "adapter": true,
+      "base_revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+      "template_sha256": "cd8e9439f0570856fd70470bf8889ebd8b5d1107207f67a5efb46e342330527f"
+    },
+    "bool_max_tokens": 422,
+    "string_max_tokens": 422,
+    "integer_stream": 422,
+    "retrieval_rerank": {
+      "recall": 1.0,
+      "rr": 1.0,
+      "ndcg": 1.0
+    },
+    "benchmark": {
+      "n": 6,
+      "independent_groups": 6,
+      "correct_fraction": 0.16666666666666666,
+      "schema_fraction": 0.5,
+      "p50_ms": 941.0752129988396,
+      "p95_ms": 18036.173577998852,
+      "wilson_single_pass": [
+        0.03005258587173032,
+        0.563509436563646
+      ],
+      "cost": null
+    },
+    "load": {
+      "model": "closed loop; scheduling wait excluded",
+      "clients": 4,
+      "n": 4,
+      "elapsed_seconds": 11.580426541999259,
+      "completed_per_second": 0.3454104203755378,
+      "http_success_per_second": 0.1727052101877689,
+      "generated_per_second": 0.1727052101877689,
+      "states": {
+        "draft_for_review": 2,
+        "http_error": 2
+      },
+      "http_error_fraction": 0.5,
+      "all_p50_ms": 203.02399700085516,
+      "all_p95_ms": 11542.442182000741,
+      "http_success_p95_ms": 11542.442182000741,
+      "gpu_vram": "sample nvidia-smi separately; not inferred from HTTP"
+    }
+  },
+  "model_outage": {
+    "model": "closed loop; scheduling wait excluded",
+    "clients": 1,
+    "n": 2,
+    "elapsed_seconds": 0.16552826999941317,
+    "completed_per_second": 12.082528259415087,
+    "http_success_per_second": 12.082528259415087,
+    "generated_per_second": 0.0,
+    "states": {
+      "degraded_search": 2
+    },
+    "http_error_fraction": 0.0,
+    "all_p50_ms": 29.91978700083564,
+    "all_p95_ms": 61.6600359990116,
+    "http_success_p95_ms": 61.6600359990116,
+    "gpu_vram": "sample nvidia-smi separately; not inferred from HTTP"
+  },
+  "rag_outage_states": [
+    "dependency_error",
+    "dependency_error",
+    "dependency_error",
+    "dependency_error",
+    "dependency_error",
+    "abstain",
+    "dependency_error",
+    "dependency_error"
+  ],
+  "ocr": {
+    "observations": 40,
+    "p95_ms": 553.1290339986299,
+    "text_pdf_chars": 142,
+    "scan_pdf_chars": 0,
+    "by_variant": {
+      "blur": {
+        "n": 8,
+        "macro_cer": 0.05456010415777342,
+        "failures": 0
+      },
+      "clean": {
+        "n": 8,
+        "macro_cer": 0.019236105182276104,
+        "failures": 0
+      },
+      "cropped": {
+        "n": 8,
+        "macro_cer": 0.3092926484817439,
+        "failures": 0
+      },
+      "rotated": {
+        "n": 8,
+        "macro_cer": 1.1802533331910412,
+        "failures": 0
+      },
+      "stamp-notes": {
+        "n": 8,
+        "macro_cer": 0.16406405631918952,
+        "failures": 0
+      }
+    }
+  },
+  "vlm": [
+    {
+      "view": "overview",
+      "image": "A-p1-clean.png",
+      "size": [
+        700,
+        500
+      ],
+      "crop_original_px": null,
+      "answer": " 100.0, 0.1, 2, 5.0, 0.2 mm",
+      "latency_ms": 18694.473841000217,
+      "peak_allocated_bytes": 921235456,
+      "review": "required: no automatic acceptance of dimensions"
+    },
+    {
+      "view": "original",
+      "image": "A-p1-clean.png",
+      "size": [
+        1400,
+        1000
+      ],
+      "crop_original_px": null,
+      "answer": " 10±0.1 mm, 1 N3 2",
+      "latency_ms": 905.4946810010733,
+      "peak_allocated_bytes": 920718848,
+      "review": "required: no automatic acceptance of dimensions"
+    },
+    {
+      "view": "crop",
+      "image": "A-p1-clean.png",
+      "size": [
+        500,
+        180
+      ],
+      "crop_original_px": [
+        850,
+        800,
+        1350,
+        980
+      ],
+      "answer": " 7:5+0,02 MM",
+      "latency_ms": 636.7176749990904,
+      "peak_allocated_bytes": 799288832,
+      "review": "required: no automatic acceptance of dimensions"
+    }
+  ],
+  "limits": [
+    "RTX 3060 12 GiB not tested",
+    "Public dev and two-step training do not establish generalization",
+    "No enterprise data/authentication, cloud billing, independent human review or full offline transfer to another physical PC",
+    "Open WebUI unchanged; no new UI run"
+  ],
+  "structure": {
+    "markdown_files": 117,
+    "local_links": 968,
+    "guides": 40,
+    "references": 40,
+    "practice_hours": 112,
+    "python_files": 28,
+    "python_blocks": 13,
+    "errors": []
+  }
+}
