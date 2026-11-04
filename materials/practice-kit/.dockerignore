@@ -1,0 +1,6 @@
+models
+work
+secrets
+bundle
+.env
+**/__pycache__

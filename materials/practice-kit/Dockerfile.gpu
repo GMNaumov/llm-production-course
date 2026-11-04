@@ -1,0 +1,6 @@
+FROM course-cpu:2026-11
+RUN pip install --no-cache-dir torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu128
+COPY requirements-gpu.txt /tmp/requirements-gpu.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-gpu.txt
+ENV HF_HUB_DISABLE_TELEMETRY=1 DO_NOT_TRACK=1 TOKENIZERS_PARALLELISM=false
+CMD ["python", "scripts/model_server.py"]

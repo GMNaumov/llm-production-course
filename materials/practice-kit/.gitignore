@@ -1,0 +1,9 @@
+work/
+models/
+secrets/
+bundle/
+.env
+__pycache__/
+*.pyc
+bin/
+obj/

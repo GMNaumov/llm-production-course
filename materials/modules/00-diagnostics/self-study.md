@@ -79,4 +79,4 @@ Go означает разрешение следующего ограничен
 
 - [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) — назначение системы, заинтересованные стороны и управление рисками.
 - [Google SRE: Embracing Risk](https://sre.google/sre-book/embracing-risk/) — связь надёжности, стоимости и допустимого риска; дополнительное чтение.
-- [Программа курса](../../../curriculum.md) — обязательные границы и критерии П0.1; подробное практическое задание будет разработано отдельно.
+- [Программа курса](../../../curriculum.md) — обязательные границы и критерии П0.1; [задание](practice/p0-1-process-map-and-baseline.md) и [эталон](solutions/p0-1-process-map-and-baseline.md) доступны для самостоятельной работы.

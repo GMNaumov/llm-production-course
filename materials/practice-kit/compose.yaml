@@ -1,0 +1,122 @@
+name: llm-course
+services:
+  secrets-init:
+    image: course-cpu:2026-11
+    working_dir: /kit
+    volumes:
+      - .:/kit:ro
+      - course-secrets:/run/course-secrets
+    command: ["python", "scripts/provision_container_secrets.py"]
+    network_mode: none
+  lab:
+    image: course-cpu:2026-11
+    build: .
+    working_dir: /kit
+    volumes:
+      - .:/kit
+      - course-secrets:/run/secrets:ro
+    command: ["python", "scripts/demo.py", "all"]
+    networks: [training]
+  gateway:
+    image: course-cpu:2026-11
+    working_dir: /kit
+    volumes:
+      - .:/kit:ro
+      - ./work:/kit/work
+      - course-secrets:/run/secrets:ro
+    command: ["uvicorn", "scripts.gateway:app", "--host", "0.0.0.0", "--port", "8080", "--no-access-log", "--limit-concurrency", "32"]
+    ports: ["127.0.0.1:8080:8080"]
+    environment:
+      MODEL_URL: http://inference:8000
+      RELEASE_ID: training-r1
+      RATE_LIMIT: "60"
+      QUOTA: "300"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/live',timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks: [training]
+  db:
+    image: postgres:16.6-bookworm
+    profiles: [integration]
+    environment:
+      POSTGRES_DB: training
+      POSTGRES_USER: trainer
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-admin.txt
+    volumes:
+      - course-secrets:/run/secrets:ro
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - pg-data-v2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trainer -d training"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [training]
+  api:
+    image: course-dotnet:2026-11
+    build: ./dotnet
+    profiles: [integration]
+    volumes:
+      - course-secrets:/run/secrets:ro
+    environment:
+      ASPNETCORE_URLS: http://+:8090
+    networks: [training]
+  inference:
+    image: course-gpu:2026-11
+    profiles: [gpu]
+    working_dir: /kit
+    command: ["python", "scripts/model_server.py"]
+    volumes:
+      - .:/kit:ro
+      - ./models:/models:ro
+      - ./work:/kit/work
+    environment:
+      MODEL_PATH: "${MODEL_PATH:-/models/chat-small}"
+      EMBEDDING_PATH: /models/embedding
+      RERANKER_PATH: "${RERANKER_PATH:-/models/reranker}"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      QUANTIZE: "${QUANTIZE:-0}"
+      ADAPTER_PATH: "${ADAPTER_PATH:-}"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready',timeout=2)"]
+      start_period: 180s
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    networks: [training]
+  webui:
+    image: ghcr.io/open-webui/open-webui:v0.6.18
+    profiles: [ui]
+    ports: ["127.0.0.1:3000:8080"]
+    environment:
+      ENABLE_OPENAI_API: "true"
+      OPENAI_API_BASE_URL: http://inference:8000/v1
+      OPENAI_API_BASE_URLS: http://inference:8000/v1
+      OPENAI_API_KEYS: training-internal-only
+      OPENAI_API_CONFIGS: '{"0":{"enable":true,"model_ids":["training"]}}'
+      ENABLE_OLLAMA_API: "false"
+      ENABLE_EVALUATION_ARENA_MODELS: "false"
+      OFFLINE_MODE: "true"
+      HF_HUB_OFFLINE: "1"
+      DO_NOT_TRACK: "true"
+      SCARF_NO_ANALYTICS: "true"
+      ANONYMIZED_TELEMETRY: "false"
+    volumes: [webui-data:/app/backend/data]
+    networks: [training]
+networks:
+  training:
+    internal: true
+volumes:
+  pg-data-v2:
+  webui-data:
+  course-secrets:

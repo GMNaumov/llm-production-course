@@ -1,0 +1,27 @@
+name: llm-course-ui-check
+services:
+  webui:
+    image: ghcr.io/open-webui/open-webui:v0.6.18
+    environment:
+      ENABLE_OPENAI_API: "true"
+      OPENAI_API_BASE_URL: http://inference:8000/v1
+      OPENAI_API_BASE_URLS: http://inference:8000/v1
+      OPENAI_API_KEYS: training-internal-only
+      OPENAI_API_CONFIGS: '{"0":{"enable":true,"model_ids":["training"]}}'
+      ENABLE_OLLAMA_API: "false"
+      ENABLE_EVALUATION_ARENA_MODELS: "false"
+      DEFAULT_USER_ROLE: user
+      ENABLE_PERSISTENT_CONFIG: "false"
+      OFFLINE_MODE: "true"
+      HF_HUB_OFFLINE: "1"
+      DO_NOT_TRACK: "true"
+      SCARF_NO_ANALYTICS: "true"
+      ANONYMIZED_TELEMETRY: "false"
+    volumes: [ui-validation-final:/app/backend/data]
+    networks: [training]
+volumes:
+  ui-validation-final:
+networks:
+  training:
+    external: true
+    name: llm-course_training
